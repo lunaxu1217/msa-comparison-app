@@ -2,7 +2,7 @@ from src.utils import list_sequences
 from src.alignment_runners import RUNNERS
 from src.metrics import compute_all_metrics
 
-sequences = list_sequences("h3h4")
+sequences = list_sequences("hemoglobin")
 print(f"Loaded {len(sequences)} sequences\n")
 
 for method_name, runner in RUNNERS.items():
