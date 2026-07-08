@@ -21,6 +21,55 @@ with st.sidebar:
     run_button = st.button("Run Alignment", type="primary")
 
 if run_button:
+    st.divider()
+st.subheader("📊 Full Benchmark: All Proteins × All Methods")
+st.caption("Run every method on every protein to compare conservation representation across the board.")
+
+run_all_button = st.button("Run Full Benchmark", type="secondary")
+
+if run_all_button:
+    results = []
+    progress = st.progress(0, text="Starting benchmark...")
+    total_runs = len(list_proteins()) * len(RUNNERS)
+    current_run = 0
+
+    for protein_name in list_proteins():
+        protein_seqs = list_sequences(protein_name)
+        if len(protein_seqs) < 2:
+            continue
+        for method_name, runner in RUNNERS.items():
+            current_run += 1
+            progress.progress(current_run / total_runs, text=f"Running {method_name} on {protein_name}...")
+            try:
+                alignment = runner(protein_seqs)
+                metrics = compute_all_metrics(alignment)
+                results.append({
+                    "Protein": protein_name,
+                    "Method": method_name,
+                    **metrics
+                })
+            except RuntimeError as e:
+                results.append({
+                    "Protein": protein_name,
+                    "Method": method_name,
+                    "Alignment Length": "ERROR",
+                    "% Conserved Positions": "ERROR",
+                    "% Gaps": "ERROR",
+                    "Column Score": "ERROR"
+                })
+
+    progress.empty()
+    results_df = pd.DataFrame(results)
+    st.session_state["benchmark_results"] = results_df
+
+if "benchmark_results" in st.session_state:
+    st.dataframe(st.session_state["benchmark_results"], use_container_width=True)
+
+    st.markdown("#### Column Score by Protein and Method")
+    chart_df = st.session_state["benchmark_results"].pivot(
+        index="Protein", columns="Method", values="Column Score"
+    )
+    st.bar_chart(chart_df)
     if len(species_choices) < 2:
         st.warning("Select at least 2 sequences to align.")
         st.stop()
