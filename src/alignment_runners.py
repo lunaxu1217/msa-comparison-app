@@ -26,7 +26,13 @@ def run_clustalo(records: dict):
     infile = _write_temp_fasta(records)
     outfile = infile.with_suffix(".aln.fasta")
     cmd = ["clustalo", "-i", str(infile), "-o", str(outfile), "--force", "--outfmt=fasta"]
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True)
+    except FileNotFoundError:
+        raise RuntimeError(
+            "Clustal Omega is not installed or not found on PATH. "
+            "See README.md 'Known Limitations' section for Windows setup options."
+        )
     if result.returncode != 0:
         raise RuntimeError(f"Clustal Omega failed: {result.stderr}")
     return AlignIO.read(outfile, "fasta")
