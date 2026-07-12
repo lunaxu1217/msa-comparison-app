@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 from src.utils import list_proteins, list_sequences
 from src.alignment_runners import RUNNERS
 from src.metrics import compute_all_metrics
@@ -66,10 +67,18 @@ if "benchmark_results" in st.session_state:
     st.dataframe(st.session_state["benchmark_results"], use_container_width=True)
 
     st.markdown("#### Column Score by Protein and Method")
-    chart_df = st.session_state["benchmark_results"].pivot(
-        index="Protein", columns="Method", values="Column Score"
+    chart_data = st.session_state["benchmark_results"]
+    fig = px.bar(
+        chart_data,
+        x="Protein",
+        y="Column Score",
+        color="Method",
+        barmode="group",
+        title="Column Score by Protein and Method",
+        labels={"Column Score": "Column Score (0–100)", "Protein": "Protein"},
     )
-    st.bar_chart(chart_df)
+    fig.update_yaxes(range=[0, 100])
+    st.plotly_chart(fig, use_container_width=True)
     if len(species_choices) < 2:
         st.warning("Select at least 2 sequences to align.")
         st.stop()
