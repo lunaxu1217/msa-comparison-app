@@ -5,13 +5,25 @@ from src.utils import list_proteins, list_sequences
 from src.alignment_runners import RUNNERS
 from src.metrics import compute_all_metrics
 
+
+PROTEIN_DISPLAY_NAMES = {
+    "h3h4": "Histone H3",
+    "hemoglobin": "Hemoglobin",
+    "p53": "p53",
+}
+
 st.set_page_config(page_title="MSA Method Comparator", layout="wide")
 st.title("🧬 Multiple Sequence Alignment Comparator")
 st.caption("Compare MUSCLE, Clustal Omega, and MAFFT across proteins of varying conservation.")
 
 with st.sidebar:
     st.header("Configuration")
-    protein = st.selectbox("Select protein", list_proteins())
+    protein_keys = list_proteins()
+    protein = st.selectbox(
+        "Select protein",
+        protein_keys,
+        format_func=lambda key: PROTEIN_DISPLAY_NAMES.get(key, key)
+    )
     available = list_sequences(protein)
     species_choices = st.multiselect(
         "Select species",
@@ -23,8 +35,8 @@ with st.sidebar:
 
 if run_button:
     st.divider()
-st.subheader("📊 Full Benchmark: All Proteins × All Methods")
-st.caption("Run every method on every protein to compare conservation representation across the board.")
+    st.subheader("📊 Full Benchmark: All Proteins × All Methods")
+    st.caption("Run every method on every protein to compare conservation representation across the board.")
 
 run_all_button = st.button("Run Full Benchmark", type="secondary")
 
@@ -61,6 +73,7 @@ if run_all_button:
 
     progress.empty()
     results_df = pd.DataFrame(results)
+    results_df["Protein"] = results_df["Protein"].map(lambda k: PROTEIN_DISPLAY_NAMES.get(k, k))
     st.session_state["benchmark_results"] = results_df
 
 if "benchmark_results" in st.session_state:
